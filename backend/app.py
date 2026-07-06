@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from config import Config
 from extensions import db
 from models import ensure_sqlite_dir, create_all_tables
+from seed import ensure_seed_data
 
 
 def create_app(config_object: type = Config) -> Flask:
@@ -20,8 +21,10 @@ def create_app(config_object: type = Config) -> Flask:
     def root():
         return jsonify({"message": "Welcome to the PlaceHub API!"})
 
+   # Create DB and seed minimal data
     with app.app_context():
-        create_all_tables()  # Create all tables in the database
+        create_all_tables()
+        ensure_seed_data()
 
     return app
 
