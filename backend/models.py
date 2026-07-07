@@ -32,6 +32,7 @@ class User(db.Model, TimestampMixin):
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    is_blocked = db.Column(db.Boolean, default=False)
     role = db.Column(
         Enum("admin", "company", "student", name="role_enum"), nullable=False
     )

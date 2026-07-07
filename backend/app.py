@@ -17,7 +17,11 @@ def create_app(config_object: type = Config) -> Flask:
     # Init Extensions
     db.init_app(app)
 
-    @app.route("/", methods=["GET"])
+    # Register API blueprints
+    from api import api_bp
+    app.register_blueprint(api_bp, url_prefix="/api")
+
+    @app.get("/")
     def root():
         return jsonify({"message": "Welcome to the PlaceHub API!"})
 
