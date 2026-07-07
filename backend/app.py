@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 
 from config import Config
-from extensions import db
+from extensions import db, jwt
 from models import ensure_sqlite_dir, create_all_tables
 from seed import ensure_seed_data
 
@@ -16,6 +16,7 @@ def create_app(config_object: type = Config) -> Flask:
 
     # Init Extensions
     db.init_app(app)
+    jwt.init_app(app)
 
     # Register API blueprints
     from api import api_bp

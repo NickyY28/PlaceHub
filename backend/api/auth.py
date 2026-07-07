@@ -30,8 +30,8 @@ def register_company():
             return jsonify({"error": "Email already exists"}), 400
         user = User(name=data["name"], email=data["email"], role="company")
         user.set_password(data["password"])
-        if not user or not user.check_password(data["password"]):
-            return jsonify({"error": "Invalid password"}), 400
+        db.session.add(user)
+        db.session.commit()
 
         company_profile = Company(
             user_id=user.id,
@@ -40,11 +40,13 @@ def register_company():
             location=data["location"],
             description=data["description"],
         )
+        db.session.add(company_profile)
+        db.session.commit()
         if not company_profile:
             return jsonify({"error": "Invalid company profile data"}), 400
 
         return jsonify({
-            "message": "Company registered successfully",
+            "msg": "Company registered successfully",
             "data": {
                 "user_id": user.id,
                 "company_id": company_profile.id,
@@ -68,8 +70,9 @@ def register_student():
         user = User(name=data["name"],
                     email=data["email"], role="student")
         user.set_password(data["password"])
-        if not user or not user.check_password(data["password"]):
-            return jsonify({"error": "Invalid password"}), 400
+        db.session.add(user)
+        db.session.commit()
+
         student_profile = Student(
             user_id=user.id,
             college=data["college"],
@@ -77,10 +80,12 @@ def register_student():
             skills=data["skills"],
             resume=data["resume_url"],
         )
+        db.session.add(student_profile)
+        db.session.commit()
         if not student_profile:
             return jsonify({"error": "Invalid student profile data"}), 400
         return jsonify({
-            "message": "Student registered successfully",
+            "msg": "Student registered successfully",
             "data": {
                 "user_id": user.id,
                 "student_id": student_profile.id,
@@ -110,11 +115,9 @@ def login():
             additional_claims={"role": user.role},
         )
 
-        return jsonify({"token": token, "role": user.role, "full_name": user.full_name})
+        return jsonify({"token": token, "role": user.role, "name": user.name})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# logout
 
 
 @auth.patch("/logout")
@@ -122,7 +125,7 @@ def login():
 def logout():
     try:
         # Invalidate the token by adding it to a blocklist (if implemented)
-        return jsonify({"message": "Logged out successfully"}), 200
+        return jsonify({"msg": "Logged out successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -134,8 +137,11 @@ def me():
         uid = get_jwt_identity()
         uid = int(uid)
         u = User.query.get(uid)
+        print("user_id", u.id)
+        print("user_role", u.role)
         if not u:
             return jsonify({"error": "Not found"}), 404
+
         if u.role == "company":
             profile = Company.query.filter_by(user_id=u.id).first()
             return jsonify({
@@ -164,6 +170,14 @@ def me():
                     "resume_url": profile.resume
                 }
             })
+        else:
+            return jsonify({
+                "id": u.id,
+                "name": u.name,
+                "email": u.email,
+                "role": u.role
+            })
+
     except Exception as e:
         if isinstance(e, ValueError):
             return jsonify({"error": "Invalid user ID"}), 400
