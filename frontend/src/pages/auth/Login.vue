@@ -30,6 +30,11 @@
       </div>
     </div>
   </div>
+  <div class="text-center mt-3">
+    <RouterLink to="/register/student"> Register as Student </RouterLink>
+    <span class="mx-2">|</span>
+    <RouterLink to="/register/company"> Register as Company </RouterLink>
+  </div>
 </template>
 
 <script setup>
