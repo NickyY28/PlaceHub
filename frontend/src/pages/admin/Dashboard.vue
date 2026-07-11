@@ -1,35 +1,35 @@
 <template>
   <div>
-    <h3 class="mb-4">Admin Dashboard</h3>
+    <PageHeader title="Admin Dashboard" subtitle="System Overview" />
 
     <div class="row">
       <StatCard
         title="Users"
-        :value="dashboard.users"
+        :value="dashboard.total_users"
         icon="bi bi-people-fill"
       />
 
       <StatCard
         title="Companies"
-        :value="dashboard.companies"
+        :value="dashboard.total_companies"
         icon="bi bi-building"
       />
 
       <StatCard
         title="Students"
-        :value="dashboard.students"
+        :value="dashboard.total_students"
         icon="bi bi-mortarboard-fill"
       />
 
       <StatCard
         title="Drives"
-        :value="dashboard.drives"
+        :value="dashboard.total_drives"
         icon="bi bi-briefcase-fill"
       />
 
       <StatCard
         title="Applications"
-        :value="dashboard.applications"
+        :value="dashboard.total_applications"
         icon="bi bi-file-earmark-text-fill"
       />
     </div>
@@ -37,14 +37,21 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
+
+import PageHeader from "../../components/common/PageHeader.vue";
 import StatCard from "../../components/common/StatCard.vue";
 
-const dashboard = reactive({
-  users: 0,
-  companies: 0,
-  students: 0,
-  drives: 0,
-  applications: 0,
-});
+import { getDashboard } from "../../api/admin";
+
+const dashboard = reactive({});
+
+const load = async () => {
+  const { data } = await getDashboard();
+  console.log("Data", data);
+
+  Object.assign(dashboard, data);
+};
+
+onMounted(load);
 </script>
