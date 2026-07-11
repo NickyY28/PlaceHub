@@ -11,11 +11,8 @@
           class="badge"
           :class="{
             'bg-warning': row.status === 'applied',
-
             'bg-info': row.status === 'in-touch',
-
             'bg-success': row.status === 'shortlisted',
-
             'bg-danger': row.status === 'rejected',
           }"
         >

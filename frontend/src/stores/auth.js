@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 
-export const useAuthStore = defineStore("auth", {
+const useAuthStore = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("token") || "",
-    user: null,
-    role: "",
+    user: JSON.parse(localStorage.getItem("user")) || null,
+    role: localStorage.getItem("role") || "",
     isLoggedIn: !!localStorage.getItem("token"),
   }),
 
@@ -15,14 +15,17 @@ export const useAuthStore = defineStore("auth", {
       this.role = user.role;
       this.isLoggedIn = true;
       localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("role", user.role);
     },
-
     logout() {
       this.token = "";
       this.user = null;
       this.role = "";
       this.isLoggedIn = false;
-      localStorage.removeItem("token");
+      localStorage.clear();
     },
   },
 });
+
+export { useAuthStore };
