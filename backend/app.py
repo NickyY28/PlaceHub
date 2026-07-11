@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 from config import Config
 from extensions import db, jwt
@@ -9,6 +10,7 @@ from seed import ensure_seed_data
 def create_app(config_object: type = Config) -> Flask:
 
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(config_object)
 
     # Ensure SQLite directory exists before initializing extensions
