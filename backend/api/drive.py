@@ -1,23 +1,20 @@
 from datetime import datetime
 
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
+from utils.decorators import company_required
 
 from extensions import db
-from models import User, CompanyProfile, PlacementDrive
+from models import CompanyProfile, PlacementDrive
 
 drive = Blueprint("drive", __name__)
 
 
-@drive.post("/")
+@drive.post("")
 @jwt_required()
-def create_drive():
+@company_required
+def create_drive(user):
     try:
-        user = User.query.get(int(get_jwt_identity()))
-
-        if not user or user.role != "company":
-            return jsonify({"error": "Unauthorized"}), 403
-
         company = CompanyProfile.query.filter_by(user_id=user.id).first()
 
         data = request.get_json() or {}
@@ -33,16 +30,26 @@ def create_drive():
 
         if not all(data.get(field) for field in required):
             return jsonify({"error": "Missing required fields"}), 400
+        try:
+            package = float(data["package"])
+        except (ValueError, TypeError):
+            return jsonify({"error": "Package must be a valid number"}), 400
+
+        try:
+            deadline = datetime.strptime(
+                data["deadline"],
+                "%Y-%m-%d"
+            ).date()
+        except ValueError:
+            return jsonify({"error": "Invalid deadline format (YYYY-MM-DD required)"}), 400
 
         drive_obj = PlacementDrive(
             company_id=company.id,
             title=data["title"],
             description=data["description"],
-            package=data["package"],
+            package=package,
             location=data["location"],
-            deadline=datetime.strptime(
-                data["deadline"], "%Y-%m-%d"
-            ).date(),
+            deadline=deadline,
             eligibility=data["eligibility"],
         )
 
@@ -64,16 +71,11 @@ def create_drive():
         return jsonify({"error": str(e)}), 500
 
 
-@drive.get("/")
+@drive.get("")
 @jwt_required()
-def get_drives():
-
+@company_required
+def get_drives(user):
     try:
-
-        user = User.query.get(int(get_jwt_identity()))
-
-        if user.role != "company":
-            return jsonify({"error": "Unauthorized"}), 403
 
         company = CompanyProfile.query.filter_by(user_id=user.id).first()
 
@@ -103,14 +105,10 @@ def get_drives():
 
 @drive.get("/<int:drive_id>")
 @jwt_required()
-def get_drive(drive_id):
+@company_required
+def get_drive(user, drive_id):
 
     try:
-
-        user = User.query.get(int(get_jwt_identity()))
-
-        if user.role != "company":
-            return jsonify({"error": "Unauthorized"}), 403
 
         company = CompanyProfile.query.filter_by(user_id=user.id).first()
 
@@ -140,14 +138,10 @@ def get_drive(drive_id):
 
 @drive.put("/<int:drive_id>")
 @jwt_required()
-def update_drive(drive_id):
+@company_required
+def update_drive(user, drive_id):
 
     try:
-
-        user = User.query.get(int(get_jwt_identity()))
-
-        if user.role != "company":
-            return jsonify({"error": "Unauthorized"}), 403
 
         company = CompanyProfile.query.filter_by(user_id=user.id).first()
 
@@ -193,15 +187,9 @@ def update_drive(drive_id):
 
 @drive.delete("/<int:drive_id>")
 @jwt_required()
-def delete_drive(drive_id):
-
+@company_required
+def delete_drive(user, drive_id):
     try:
-
-        user = User.query.get(int(get_jwt_identity()))
-
-        if user.role != "company":
-            return jsonify({"error": "Unauthorized"}), 403
-
         company = CompanyProfile.query.filter_by(user_id=user.id).first()
 
         drive_obj = PlacementDrive.query.filter_by(

@@ -1,6 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
+from datetime import datetime, timedelta
+
+
 from extensions import db
 from models import CompanyProfile, PlacementDrive, Application
 from utils.decorators import company_required
@@ -75,6 +78,28 @@ def dashboard(user):
                 drive_ids), Application.status == "rejected"
         ).count()
 
+        # Recent Dreives
+        recent_drives = []
+
+        for d in drives:
+            if d.created_at >= (datetime.now() - timedelta(days=7)):
+                no_of_applications = Application.query.filter_by(
+                    drive_id=d.id).count()
+
+                recent_drives.append(
+                    {
+                        "id": d.id,
+                        "title": d.title,
+                        "package": d.package,
+                        "location": d.location,
+                        "deadline": d.deadline,
+                        "eligibility": d.eligibility,
+                        "no_of_applications": no_of_applications,
+                        "created_at": d.created_at
+
+                    }
+                )
+
         return jsonify(
             {
                 "company": profile.company_name,
@@ -82,6 +107,7 @@ def dashboard(user):
                 "total_applications": total_applications,
                 "shortlisted": shortlisted,
                 "rejected": rejected,
+                "recent_drives": recent_drives
             }
         )
 

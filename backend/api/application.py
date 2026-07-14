@@ -13,7 +13,7 @@ from models import (
 application = Blueprint("application", __name__)
 
 
-@application.get("/")
+@application.get("")
 @jwt_required()
 def get_all_applications():
     try:
