@@ -1,6 +1,6 @@
 <template>
   <div class="col-md-2 border-end bg-white vh-100 p-0 shadow-sm">
-    <div class="list-group list-group-flush">
+    <div class="list-group list-group-item-action text-start">
       <RouterLink
         v-for="item in menu"
         :key="item.path"

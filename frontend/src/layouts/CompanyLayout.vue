@@ -3,7 +3,7 @@
     <Navbar />
 
     <div class="container-fluid">
-      <div class="row">
+      <div class="row pt-1">
         <Sidebar />
 
         <main class="col-md-10 p-4">
