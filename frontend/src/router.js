@@ -20,7 +20,7 @@ import StudentApplications from "./pages/student/Applications.vue";
 
 // Companies Pages
 import CompanyDashboard from "./pages/company/Dashboard.vue";
-// import CompanyProfile from "./pages/company/Profile.vue";
+import CompanyProfile from "./pages/company/Profile.vue";
 import CompanyDrives from "./pages/company/Drives.vue";
 import CompanyCreateDrive from "./pages/company/CreateDrive.vue";
 import CompanyEditDrive from "./pages/company/EditDrive.vue";
@@ -99,10 +99,10 @@ const routes = [
         component: CompanyDashboard,
       },
 
-      // {
-      //   path: "profile",
-      //   component: CompanyProfile,
-      // },
+      {
+        path: "profile",
+        component: CompanyProfile,
+      },
 
       {
         path: "drives",

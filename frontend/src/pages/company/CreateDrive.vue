@@ -56,11 +56,8 @@
 
 <script setup>
 import { reactive } from "vue";
-
 import { useRouter } from "vue-router";
-
 import PageHeader from "../../components/common/PageHeader.vue";
-
 import { createDrive } from "../../api/company";
 
 const router = useRouter();
@@ -76,7 +73,6 @@ const form = reactive({
 
 const save = async () => {
   await createDrive(form);
-
   router.push("/company/drives");
 };
 </script>
