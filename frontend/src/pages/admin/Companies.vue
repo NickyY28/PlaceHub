@@ -1,35 +1,54 @@
 <template>
-  <PageHeader title="Companies" subtitle="Registered Companies" />
+  <div>
+    <PageHeader title="Companies" subtitle="Manage company approvals" />
 
-  <DataTable :columns="columns" :rows="companies">
-    <template #is_blocked="{ row }">
-      <button v-if="row.is_blocked" class="btn btn-warning btn-sm me-2">
-        Yes
-      </button>
-      <button v-else class="btn btn-success btn-sm me-2">No</button>
-    </template>
-    <template #actions="{ row }">
-      <button
-        v-if="!row.is_blocked"
-        class="btn btn-warning btn-sm me-2"
-        @click="block(row.user_id)"
-      >
-        Block
-      </button>
+    <DataTable :columns="columns" :rows="companies">
+      <!-- <template #status="{ row }">
+        <button
+          v-if="row.status !== 'approved'"
+          class="btn btn-success btn-sm me-2"
+        >
+          Approve
+        </button>
+        <button
+          v-else-if="row.status !== 'rejected'"
+          class="btn btn-success btn-sm me-2"
+        >
+          Rejected
+        </button>
+        <button v-else class="btn btn-success btn-sm me-2">Panding</button>
+      </template> -->
+      <template #status="{ row }">
+        <span
+          class="badge"
+          :class="{
+            'bg-success': row.status === 'approved',
+            'bg-danger': row.status === 'rejected',
+            'bg-warning text-dark': row.status === 'pending',
+          }"
+        >
+          {{ row.status }}
+        </span>
+      </template>
+      <template #actions="{ row }">
+        <button
+          v-if="row.status !== 'approved'"
+          class="btn btn-success btn-sm me-2"
+          @click="updateApproval(row.id, 'approved')"
+        >
+          Approve
+        </button>
 
-      <button
-        v-else
-        class="btn btn-success btn-sm me-2"
-        @click="unblock(row.user_id)"
-      >
-        Unblock
-      </button>
-
-      <button class="btn btn-danger btn-sm" @click="remove(row.user_id)">
-        Delete
-      </button>
-    </template>
-  </DataTable>
+        <button
+          v-if="row.status !== 'rejected'"
+          class="btn btn-danger btn-sm"
+          @click="updateApproval(row.id, 'rejected')"
+        >
+          Reject
+        </button>
+      </template>
+    </DataTable>
+  </div>
 </template>
 
 <script setup>
@@ -37,45 +56,25 @@ import { ref, onMounted } from "vue";
 
 import PageHeader from "../../components/common/PageHeader.vue";
 import DataTable from "../../components/common/DataTable.vue";
-
-import {
-  getCompanies,
-  blockUser,
-  unblockUser,
-  deleteUser,
-} from "../../api/admin";
+import { getCompanies, updateCompanyApproval } from "../../api/admin";
 
 const companies = ref([]);
 
 const columns = [
   { key: "company_name", label: "Company" },
   { key: "email", label: "Email" },
-  { key: "website", label: "Website" },
   { key: "location", label: "Location" },
-  { key: "description", label: "Description" },
-  { key: "is_blocked", label: "Block" },
+  { key: "status", label: "Approval Status" },
 ];
-
-const block = async (id) => {
-  await blockUser(id);
-  load();
-};
-
-const unblock = async (id) => {
-  await unblockUser(id);
-  load();
-};
-
-const remove = async (id) => {
-  if (!confirm("Delete User?")) return;
-  await deleteUser(id);
-  load();
-};
 
 const load = async () => {
   const { data } = await getCompanies();
-  console.log(data.companies);
   companies.value = data.companies;
+};
+
+const updateApproval = async (id, status) => {
+  await updateCompanyApproval(id, status);
+  load();
 };
 
 onMounted(load);

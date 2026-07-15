@@ -2,6 +2,12 @@ import api from "./axios";
 
 const getDashboard = () => api.get("/admin/dashboard");
 
+const updateCompanyApproval = (companyId, status) => {
+  return api.patch(`/admin/companies/${companyId}/approval`, {
+    status,
+  });
+};
+
 const getUsers = () => api.get("/admin/users");
 
 const blockUser = (id) => api.patch(`/admin/users/${id}/block`);
@@ -20,6 +26,7 @@ const deleteDrive = (id) => api.delete(`/admin/drives/${id}`);
 
 export {
   getDashboard,
+  updateCompanyApproval,
   getUsers,
   blockUser,
   unblockUser,

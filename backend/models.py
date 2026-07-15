@@ -61,6 +61,17 @@ class CompanyProfile(db.Model, TimestampMixin):
     location = db.Column(db.String(255))
     description = db.Column(db.Text)
 
+    approval_status = db.Column(
+        Enum(
+            "pending",
+            "approved",
+            "rejected",
+            name="company_approval_status"
+        ),
+        default="pending",
+        nullable=False
+    )
+
     # Relationships
     user = db.relationship("User", back_populates="company_profile")
     placement_drives = db.relationship(

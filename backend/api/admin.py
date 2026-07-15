@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from extensions import db
@@ -68,7 +68,7 @@ def get_companies(user):
                     "location": c.location,
                     "description": c.description,
                     "user_id": c.user.id,
-                    "is_blocked": c.user.is_blocked,
+                    "status": c.approval_status,
 
                 }
                 for c in CompanyProfile.query.options(joinedload(CompanyProfile.user)).all()
@@ -142,6 +142,39 @@ def get_applications(user):
             ]
         })
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@admin.patch("/companies/<int:company_id>/approval")
+@jwt_required()
+@admin_required
+def update_company_approval(user, company_id):
+    try:
+        data = request.get_json()
+        status = data.get("status")
+
+        if status not in ["approved", "rejected"]:
+            return jsonify({
+                "error": "Status must be approved or rejected"
+            }), 400
+
+        company = CompanyProfile.query.get(company_id)
+
+        if not company:
+            return jsonify({
+                "error": "Company not found"
+            }), 404
+
+        company.approval_status = status
+        db.session.commit()
+
+        return jsonify({
+            "message": f"Company {status} successfully",
+            "approval_status": company.approval_status
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 

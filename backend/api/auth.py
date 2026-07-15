@@ -109,6 +109,13 @@ def login():
         elif user.is_blocked:
             return jsonify({"error": "User is blocked"}), 403
 
+        if user.role == "company":
+            profile = Company.query.filter_by(user_id=user.id).first()
+            if not profile:
+                return jsonify({"error": "Company profile not found"}), 404
+            if profile.approval_status != "approved":
+                return jsonify({"error": "Company not approved"}), 403
+
         token = create_access_token(
             identity=str(user.id),
             expires_delta=timedelta(hours=8),
