@@ -21,91 +21,128 @@ admin = Blueprint("admin", __name__)
 @admin_required
 def dashboard(user):
 
-    data = {
-        "users": [],
-        "companies": [],
-        "students": [],
-        "drives": [],
-        "applications": [],
-    }
+    return jsonify({
+        "total_users": User.query.count(),
+        "total_students": User.query.filter_by(role="student").count(),
+        "total_companies": CompanyProfile.query.count(),
+        "total_applications": Application.query.count(),
+        "total_drives": PlacementDrive.query.count(),
 
-    users = User.query.all()
+    })
 
-    companies = CompanyProfile.query.options(
-        joinedload(CompanyProfile.user)
-    ).all()
 
-    students = StudentProfile.query.options(
-        joinedload(StudentProfile.user)
-    ).all()
+@admin.get("/users")
+@jwt_required()
+@admin_required
+def get_users(user):
+    try:
+        return jsonify({
+            "users": [
+                {
+                    "id": u.id,
+                    "name": u.name,
+                    "email": u.email,
+                    "role": u.role,
+                    "is_blocked": u.is_blocked,
+                }
+                for u in User.query.all()
+            ]
+        }), 200
 
-    drives = PlacementDrive.query.options(
-        joinedload(PlacementDrive.company)
-    ).all()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    applications = Application.query.options(
-        joinedload(Application.student).joinedload(StudentProfile.user),
-        joinedload(Application.drive),
-    ).all()
 
-    data["users"] = [
-        {
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "role": u.role,
-            "is_blocked": u.is_blocked,
-        }
-        for u in users
-    ]
+@admin.get("/companies")
+@jwt_required()
+@admin_required
+def get_companies(user):
+    try:
+        return jsonify({
+            "companies": [
+                {
+                    "id": c.id,
+                    "company_name": c.company_name,
+                    "email": c.user.email,
+                    "website": c.website,
+                    "location": c.location,
+                    "description": c.description,
+                    "user_id": c.user.id,
+                    "is_blocked": c.user.is_blocked,
 
-    data["companies"] = [
-        {
-            "id": c.id,
-            "company_name": c.company_name,
-            "email": c.user.email,
-            "website": c.website,
-            "location": c.location,
-        }
-        for c in companies
-    ]
+                }
+                for c in CompanyProfile.query.options(joinedload(CompanyProfile.user)).all()
+            ]
+        }), 200
 
-    data["students"] = [
-        {
-            "id": s.id,
-            "name": s.user.name,
-            "email": s.user.email,
-            "college": s.college,
-            "cgpa": s.cgpa,
-            "skills": s.skills,
-        }
-        for s in students
-    ]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    data["drives"] = [
-        {
-            "id": d.id,
-            "company": d.company.company_name,
-            "title": d.title,
-            "package": d.package,
-            "deadline": d.deadline,
-        }
-        for d in drives
-    ]
 
-    data["applications"] = [
-        {
-            "id": a.id,
-            "student_name": a.student.user.name,
-            "student_email": a.student.user.email,
-            "drive_title": a.drive.title,
-            "status": a.status,
-            "applied_at": a.applied_at,
-        }
-        for a in applications
-    ]
+@admin.get("/students")
+@jwt_required()
+@admin_required
+def get_students(user):
+    try:
+        return jsonify({
+            "students": [
+                {
+                    "id": s.id,
+                    "name": s.user.name,
+                    "email": s.user.email,
+                    "is_blocked": s.user.is_blocked,
+                    "college": s.college,
+                    "cgpa": s.cgpa,
+                    "skills": s.skills
 
-    return jsonify(data)
+                }
+                for s in StudentProfile.query.options(joinedload(StudentProfile.user)).all()
+            ]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@admin.get("/drives")
+@jwt_required()
+@admin_required
+def get_drives(user):
+    try:
+        return jsonify({
+            "drives": [
+                {
+                    "id": d.id,
+                    "company": d.company.company_name,
+                    "title": d.title,
+                    "package": d.package,
+                    "deadline": d.deadline,
+                }
+                for d in PlacementDrive.query.options(joinedload(PlacementDrive.company)).all()
+            ]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@admin.get("/applications")
+@jwt_required()
+@admin_required
+def get_applications(user):
+    try:
+        return jsonify({
+            "applications": [
+                {
+                    "id": a.id,
+                    "student": a.student.user.name,
+                    "drive": a.drive.title,
+                    "status": a.status,
+                    "applied_at": a.applied_at,
+                }
+                for a in Application.query.options(joinedload(Application.student), joinedload(Application.drive)).all()
+            ]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @admin.patch("/users/<int:user_id>/block")
