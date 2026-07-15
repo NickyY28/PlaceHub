@@ -33,21 +33,143 @@
         icon="bi bi-file-earmark-text-fill"
       />
     </div>
+
+    <!-- Monthly Report -->
+    <div class="card shadow-sm mt-4">
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="card-title mb-1">Monthly Activity Report</h5>
+
+          <p class="text-muted mb-0">
+            Generate and download the current month's placement activity report.
+          </p>
+        </div>
+
+        <button
+          class="btn btn-primary"
+          :disabled="generatingReport"
+          @click="handleGenerateReport"
+        >
+          <span
+            v-if="generatingReport"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+
+          {{ generatingReport ? "Generating..." : "Generate Report" }}
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from "vue";
+import { reactive, ref, onMounted } from "vue";
+
 import PageHeader from "../../components/common/PageHeader.vue";
 import StatCard from "../../components/common/StatCard.vue";
-import { getDashboard } from "../../api/admin";
+
+import {
+  getDashboard,
+  generateMonthlyReport,
+  getReportStatus,
+  downloadReport,
+} from "../../api/admin";
 
 const dashboard = reactive({});
 
-onMounted(async () => {
-  const { data } = await getDashboard();
-  console.log("Data", data);
+const generatingReport = ref(false);
 
-  await Object.assign(dashboard, data);
+// Load Dashboard
+const loadDashboard = async () => {
+  try {
+    const { data } = await getDashboard();
+
+    Object.assign(dashboard, data);
+  } catch (error) {
+    console.error("Failed to load dashboard:", error);
+  }
+};
+
+// Generate Monthly Report
+const handleGenerateReport = async () => {
+  try {
+    generatingReport.value = true;
+
+    const { data } = await generateMonthlyReport();
+
+    checkReportStatus(data.task_id);
+  } catch (error) {
+    console.error(error);
+
+    alert(error.response?.data?.error || "Failed to generate report");
+
+    generatingReport.value = false;
+  }
+};
+
+// Check Celery Task Status
+const checkReportStatus = (taskId) => {
+  const interval = setInterval(async () => {
+    try {
+      const { data } = await getReportStatus(taskId);
+
+      if (data.status === "completed") {
+        clearInterval(interval);
+
+        await downloadMonthlyReport(data.filename);
+
+        generatingReport.value = false;
+      } else if (data.status === "failed") {
+        clearInterval(interval);
+
+        alert(data.error || "Report generation failed");
+
+        generatingReport.value = false;
+      }
+    } catch (error) {
+      clearInterval(interval);
+
+      console.error(error);
+
+      alert(error.response?.data?.error || "Failed to check report status");
+
+      generatingReport.value = false;
+    }
+  }, 2000);
+};
+
+// Download HTML Report
+const downloadMonthlyReport = async (filename) => {
+  try {
+    const response = await downloadReport(filename);
+
+    const blob = new Blob([response.data], {
+      type: "text/html",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+
+    alert("Failed to download report");
+  }
+};
+
+onMounted(() => {
+  loadDashboard();
 });
 </script>

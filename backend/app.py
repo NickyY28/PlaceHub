@@ -30,6 +30,10 @@ def create_app(config_object: type = Config) -> Flask:
 
     celery.Task = FlaskTask
 
+    # Register Celery Tasks
+    import tasks.student_tasks
+    import tasks.admin_tasks
+
     # Register API blueprints
     from api import api_bp
     app.register_blueprint(api_bp, url_prefix="/api")

@@ -24,6 +24,15 @@ const getDrives = () => api.get("/admin/drives");
 
 const deleteDrive = (id) => api.delete(`/admin/drives/${id}`);
 
+const generateMonthlyReport = () => api.post("/admin/generate-monthly-report");
+
+const getReportStatus = (taskId) => api.get(`/admin/report-status/${taskId}`);
+
+const downloadReport = (filename) =>
+  api.get(`/admin/download-report/${filename}`, {
+    responseType: "blob",
+  });
+
 export {
   getDashboard,
   updateCompanyApproval,
@@ -35,4 +44,7 @@ export {
   getStudents,
   getDrives,
   deleteDrive,
+  generateMonthlyReport,
+  getReportStatus,
+  downloadReport,
 };
