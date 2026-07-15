@@ -46,7 +46,7 @@ const columns = [
 
 const load = async () => {
   const { data } = await getUsers();
-  users.value = data;
+  users.value = data.users;
 };
 
 const block = async (id) => {

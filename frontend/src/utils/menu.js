@@ -63,6 +63,26 @@ const menus = {
       icon: "bi bi-grid-fill",
       path: "/admin/dashboard",
     },
+    {
+      name: "Users",
+      icon: "bi bi-people-fill",
+      path: "/admin/users",
+    },
+    {
+      name: "Companies",
+      icon: "bi bi-building",
+      path: "/admin/companies",
+    },
+    {
+      name: "Students",
+      icon: "bi bi-person-fill",
+      path: "/admin/students",
+    },
+    {
+      name: "Drives",
+      icon: "bi bi-briefcase-fill",
+      path: "/admin/drives",
+    },
   ],
 };
 

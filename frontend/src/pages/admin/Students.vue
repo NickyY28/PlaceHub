@@ -24,7 +24,7 @@ const columns = [
 
 const load = async () => {
   const { data } = await getStudents();
-  students.value = data;
+  students.value = data.students;
 };
 
 onMounted(load);

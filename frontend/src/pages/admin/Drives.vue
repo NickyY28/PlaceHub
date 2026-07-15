@@ -31,7 +31,7 @@ const columns = [
 
 const load = async () => {
   const { data } = await getDrives();
-  drives.value = data;
+  drives.value = data.drives;
 };
 
 const remove = async (id) => {

@@ -38,20 +38,16 @@
 
 <script setup>
 import { reactive, onMounted } from "vue";
-
 import PageHeader from "../../components/common/PageHeader.vue";
 import StatCard from "../../components/common/StatCard.vue";
-
 import { getDashboard } from "../../api/admin";
 
 const dashboard = reactive({});
 
-const load = async () => {
+onMounted(async () => {
   const { data } = await getDashboard();
   console.log("Data", data);
 
-  Object.assign(dashboard, data);
-};
-
-onMounted(load);
+  await Object.assign(dashboard, data);
+});
 </script>
