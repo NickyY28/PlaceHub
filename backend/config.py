@@ -21,3 +21,16 @@ class Config:
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET", SECRET_KEY)
     JWT_ACCESS_TOKEN_EXPIRES = os.environ.get(
         "JWT_ACCESS_TOKEN_EXPIRES", timedelta(hours=8))
+
+    # Redis
+    REDIS_URL = os.environ.get(
+        "REDIS_URL",
+        "redis://localhost:6379/0"
+    )
+
+    # Celery
+    CELERY = {
+        "broker_url": REDIS_URL,
+        "result_backend": REDIS_URL,
+        "task_ignore_result": False,
+    }

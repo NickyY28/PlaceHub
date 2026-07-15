@@ -12,6 +12,15 @@ const applyDrive = (id) => api.post(`/student/apply/${id}`);
 
 const getApplications = () => api.get("/student/applications");
 
+const exportApplications = () => api.post("/student/export-applications");
+
+const getExportStatus = (taskId) => api.get(`/student/export-status/${taskId}`);
+
+const downloadExport = (filename) =>
+  api.get(`/student/download-export/${filename}`, {
+    responseType: "blob",
+  });
+
 export {
   getDashboard,
   getProfile,
@@ -19,4 +28,7 @@ export {
   getDrives,
   applyDrive,
   getApplications,
+  exportApplications,
+  getExportStatus,
+  downloadExport,
 };

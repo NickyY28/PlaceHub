@@ -1,10 +1,18 @@
+import os
+from celery.result import AsyncResult
 from datetime import date
+from flask import (
+    Blueprint,
+    jsonify,
+    request,
+    send_from_directory,
+    current_app,
+)
 
-from flask import Blueprint, jsonify, request
+from extensions import db, celery
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from utils.decorators import student_required
-
-from extensions import db
+from tasks.student_tasks import export_student_applications
 from models import (
     User,
     StudentProfile,
@@ -294,3 +302,136 @@ def my_applications():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@student.post("/export-applications")
+@jwt_required()
+@student_required
+def export_applications(user):
+
+    try:
+
+        student_profile = StudentProfile.query.filter_by(
+            user_id=user.id
+        ).first()
+
+        if not student_profile:
+            return jsonify({
+                "error": "Student profile not found"
+            }), 404
+
+        task = export_student_applications.delay(
+            student_profile.id
+        )
+
+        return jsonify({
+            "message": "Export started",
+            "task_id": task.id
+        }), 202
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 500
+
+
+@student.get("/export-status/<task_id>")
+@jwt_required()
+@student_required
+def export_status(user, task_id):
+
+    task = AsyncResult(
+        task_id,
+        app=celery
+    )
+
+    if task.state == "PENDING":
+        return jsonify({
+            "status": "pending"
+        })
+
+    if task.state == "FAILURE":
+        return jsonify({
+            "status": "failed",
+            "error": str(task.info)
+        }), 500
+
+    if task.state == "SUCCESS":
+
+        result = task.result
+
+        return jsonify({
+            "status": "completed",
+            "filename": result["filename"]
+        })
+
+    return jsonify({
+        "status": task.state.lower()
+    })
+
+
+# @student.get("/download-export/<filename>")
+# @jwt_required()
+# @student_required
+# def download_export(user, filename):
+
+#     expected_filename = (
+#         f"student_{user.student_profile.id}_applications.csv"
+#     )
+
+#     if filename != expected_filename:
+#         return jsonify({
+#             "error": "Unauthorized"
+#         }), 403
+
+#     export_dir = os.path.join(
+#         current_app.root_path,
+#         "exports"
+#     )
+
+#     return send_from_directory(
+#         export_dir,
+#         filename,
+#         as_attachment=True
+#     )
+
+
+@student.get("/download-export/<filename>")
+@jwt_required()
+@student_required
+def download_export(user, filename):
+    try:
+        student_profile = StudentProfile.query.filter_by(
+            user_id=user.id
+        ).first()
+
+        if not student_profile:
+            return jsonify({
+                "error": "Student profile not found"
+            }), 404
+
+        expected_filename = (
+            f"student_{student_profile.id}_applications.csv"
+        )
+
+        if filename != expected_filename:
+            return jsonify({
+                "error": "Unauthorized"
+            }), 403
+
+        export_dir = os.path.join(
+            current_app.root_path,
+            "exports"
+        )
+
+        return send_from_directory(
+            export_dir,
+            filename,
+            as_attachment=True
+        )
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500

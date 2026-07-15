@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 
 from config import Config
-from extensions import db, jwt
+from extensions import db, jwt, celery
 from models import ensure_sqlite_dir, create_all_tables
 from seed import ensure_seed_data
 
@@ -19,6 +19,16 @@ def create_app(config_object: type = Config) -> Flask:
     # Init Extensions
     db.init_app(app)
     jwt.init_app(app)
+
+    # Celery Configuration
+    celery.conf.update(app.config["CELERY"])
+
+    class FlaskTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = FlaskTask
 
     # Register API blueprints
     from api import api_bp
